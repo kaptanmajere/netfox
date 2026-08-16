@@ -4,8 +4,6 @@ class_name RapierDriver3D
 
 var _state: StateManager3D
 
-var _stored_states: int = 0
-
 
 func _init_physics_space() -> void:
 	physics_space = get_viewport().world_3d.space
@@ -28,10 +26,8 @@ func _snapshot_space(tick: int) -> void:
 
 
 func _rollback_space(tick: int) -> void:
-	# With rolling cache, tick states are ordered by age with the newest at 0
-	var offset = NetworkTime.tick - tick
-	if (offset >= _stored_states):
+	var cache_tags: Array = _state.ordered_cache_tags()
+	var index := cache_tags.rfind(tick)
+	if index < 0:
 		return
-
-	_stored_states = min(_stored_states + 1, _state.max_cache_length)
-	_state.load_cached_state(physics_space, offset)
+	_state.load_cached_state(physics_space, index)

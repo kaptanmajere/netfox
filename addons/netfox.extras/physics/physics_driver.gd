@@ -62,6 +62,13 @@ func step_physics(delta: float, tick: int) -> void:
 	# Break up physics into smaller steps if needed
 	var frac_delta = delta / physics_factor
 	var rollback_participants = get_tree().get_nodes_in_group("network_rigid_body")
+
+	# Run one-shot gameplay events once per network tick. Continuous forces
+	# still run once for each physics sub-step below.
+	for net_rigid_body in rollback_participants:
+		if net_rigid_body.has_method("_before_physics_rollback_tick"):
+			net_rigid_body._before_physics_rollback_tick(delta, tick)
+
 	for i in range(physics_factor):
 		for net_rigid_body in rollback_participants:
 			net_rigid_body._physics_rollback_tick(frac_delta, tick)
